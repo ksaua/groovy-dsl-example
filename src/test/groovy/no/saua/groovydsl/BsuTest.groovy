@@ -9,7 +9,7 @@ class BsuTest {
 
     @SuppressWarnings("GrEqualsBetweenInconvertibleTypes")
     @Test
-    void "test"() {
+    void "Verifiser tilgjengelig innskudd"() {
         testBsu {
             år 1
             dag 1 innskudd 200
@@ -60,7 +60,7 @@ class BsuTest {
 
     @SuppressWarnings("GrEqualsBetweenInconvertibleTypes")
     @Test
-    void "test2"() {
+    void "Verifiser tilgjengelig innskudd 2"() {
         testBsu({
             år(1)
             dag(1).innskudd(200)
@@ -87,24 +87,6 @@ class BsuTest {
         })
     }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     private static void testBsu(@DelegatesTo(BsuBuilderAndTester) Closure closure) {
         def builder = new BsuBuilderAndTester()
         closure.setDelegate(builder)
@@ -112,103 +94,4 @@ class BsuTest {
         closure()
     }
 
-    public static class BsuBuilderAndTester {
-
-        Map<Integer, BigDecimal> interests = new HashMap<>()
-        List<Bsu.BsuTransaction> transactions = new ArrayList<>()
-
-        TransactionBuilder currentTransBuilder
-        int currentYear = 1
-
-        private void år(int new_year) {
-            buildAndAddCurrentTrans()
-            currentYear = new_year;
-        }
-
-        private void rente(int number) {
-            rente(number as BigDecimal)
-        }
-
-        private void rente(BigDecimal bd) {
-            interests.put(currentYear, bd.divide(BigDecimal.valueOf(100)))
-        }
-
-        private TransactionBuilder dag(int day) {
-            buildAndAddCurrentTrans()
-            currentTransBuilder = new TransactionBuilder(currentYear, day)
-            return currentTransBuilder
-        }
-
-        public void buildAndAddCurrentTrans() {
-            if (currentTransBuilder != null) {
-                transactions.add(currentTransBuilder.build())
-                currentTransBuilder = null
-            }
-        }
-
-        public void verifiser(@DelegatesTo(BsuTester) Closure closure) {
-            buildAndAddCurrentTrans()
-            def bsu = new Bsu(transactions, interests)
-            closure.delegate = new BsuTester(bsu)
-            closure.resolveStrategy = Closure.DELEGATE_FIRST
-            closure()
-        }
-
-        public class TransactionBuilder {
-            private int year
-            private int day
-            private int amount
-
-            TransactionBuilder(int year, int day) {
-                this.day = day
-                this.year = year
-            }
-
-            TransactionBuilder innskudd(int amount) {
-                this.amount = amount
-                return this
-            }
-
-            TransactionBuilder uttak(int amount) {
-                this.amount = -amount
-                return this
-            }
-
-            public Bsu.BsuTransaction build() {
-                return new Bsu.BsuTransaction(LocalDate.of(year, 1, 1).withDayOfYear(day), new BigDecimal(amount))
-            }
-        }
-    }
-
-    static class BsuTester {
-        private Bsu bsu
-
-        BsuTester(Bsu bsu) {
-            this.bsu = bsu
-        }
-
-        public BigDecimalWrapper innskudd(Map parameters) {
-            return new BigDecimalWrapper(bsu.getInnskudd(parameters["år"] as Integer))
-        }
-
-
-        BigDecimalWrapper tilgjengeligInnskudd(Map parameters) {
-            return new BigDecimalWrapper(bsu.getTilgjengeligInnskudd(parameters["år"] as Integer))
-        }
-    }
-
-    static class BigDecimalWrapper {
-        private BigDecimal value
-
-        BigDecimalWrapper(BigDecimal i) {
-            this.value = i
-        }
-
-        public boolean equals(Object other) {
-            if (other instanceof Integer) {
-                assert value == new BigDecimal(other)
-            }
-            assert value == other
-        }
-    }
 }

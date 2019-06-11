@@ -9,16 +9,16 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 class Bsu {
-    private List<BsuTransaction> list;
-    private Map<Integer, BigDecimal> interests;
+    private List<BsuTransaction> transactions;
+    private Map<Integer, BigDecimal> interestsForYear;
 
-    public Bsu(List<BsuTransaction> list, Map<Integer, BigDecimal> interests) {
-        this.list = list;
-        this.interests = interests;
+    public Bsu(List<BsuTransaction> transactions, Map<Integer, BigDecimal> interestsForYear) {
+        this.transactions = transactions;
+        this.interestsForYear = interestsForYear;
     }
 
     BigDecimal getInnskudd(int year) {
-        List<BsuTransaction> transactions = list.stream()
+        List<BsuTransaction> transactions = this.transactions.stream()
                 .filter(trans -> trans.getDate().getYear() <= year)
                 .sorted(Comparator.comparing(BsuTransaction::getDate))
                 .collect(Collectors.toList());
@@ -38,15 +38,15 @@ class Bsu {
         return sum;
     }
 
-    private BigDecimal getInterest(int year) {
-        return interests.getOrDefault(year, BigDecimal.ZERO);
-    }
-
     public BigDecimal getTilgjengeligInnskudd(int year) {
-        return list.stream()
+        return transactions.stream()
                 .filter(trans -> trans.getDate().getYear() == year)
                 .map(BsuTransaction::getAmount)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
+    private BigDecimal getInterest(int year) {
+        return interestsForYear.getOrDefault(year, BigDecimal.ZERO);
     }
 
     public static class BsuTransaction {
